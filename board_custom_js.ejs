@@ -1,0 +1,164 @@
+  <!--
+/******************************************************
+* 2023 10 31 EDIT
+*			dashboard 고객사 
+*****************************************************/
+ -->
+
+<!-- JS BOARD CUSTOM / START -->
+
+<script type="text/javascript">
+ 
+			/* 대시보드 좌측 pie 에너지원별 DataSet 생성  */
+			var rotateData_chart1 = function(results,cd,fid,rownum){
+			 var columns = results.columns;
+			 var data = results.data;
+			 var temp_arr = [];
+
+				for( i in columns ){
+					var FACTORY_ID_LIST = columns[i].FACTORY_ID_LIST.split(",");
+					var DataSet = new Object;
+					var DataSet_col = new Object;
+					var temp_egi = "";
+					let TR = "";
+
+							for( j in data){
+
+										for(k in FACTORY_ID_LIST){
+													if(columns[i].TRADING_ROOM_SEQ == data[j].TRADING_ROOM_SEQ && FACTORY_ID_LIST[k] == data[j].FACTORY_ID ){
+
+																				DataSet[k] = data[j].BUY_UNIT_VOLUME;
+																				DataSet_col[k] = data[j].FACTORY_NAME;
+																				temp_egi = data[j].ENERGY_GROUP_ID	;
+																				TR += "<tr><td>"+data[j].FACTORY_NAME
+																									+"</td><td>"+data[j].BUY_UNIT_VOLUME
+																									+"</td><td>"+data[j].SALE_UNIT_PRICE
+																									+"</td></tr>";
+												}
+
+									}
+							}
+							var chart1_data = roomSEQ_dashboard_custom_chart1_DataSet;
+							var chart1_dataSet = chart1_data[temp_egi] = {
+								names : DataSet_col,
+								data : DataSet,
+								tr : TR
+							};
+				}
+				//call_chart1(chart1_data, cd, fid);
+        call_chart1(chart1_dataSet, cd, fid);
+		 };
+
+
+
+
+
+
+		/* 대시보드 우측 스틱 에너지원별 (일단위) DataSet 생성  */
+		 var rotateData_chart2 = function(results,cd,fid,rownum){  
+					let columns = results.columns;
+					let lastMonth = results.data[0];
+					let thisMonth = results.data[1];	
+
+					/*  조회된 에너지원Arr, 월의 일자Arr  */
+					let	call_monthDays = {
+									cols:columns
+									, lastM: lastMonth
+									,	thisM: thisMonth
+									
+									,	resultSet : {}
+									,	dateSet : {}
+									, egSet : {}
+									
+									,	getArr: function() {
+												this.lastM.forEach( v => { this.egSet[v.ENERGY_GROUP_ID] = v.ENERGY_GROUP_ID;}); 
+												this.thisM.forEach( b => { this.egSet[b.ENERGY_GROUP_ID] = b.ENERGY_GROUP_ID;});	
+												this.cols.forEach( v => { this.dateSet[v.DAY] = v.DAY;}); 
+												
+												for(e in this.egSet){
+														var arr = [], arr2 = [];
+															for(d in this.dateSet){
+																	var map = new Object;
+																	map["DAY"] = d;
+																	map["lastMonth"] = 0;
+																	map["thisMonth"] = 0;
+
+																	this.lastM.forEach( v => { 
+																			if(d == v.DAY && e == v.ENERGY_GROUP_ID){
+																				map["lastMonth"] = v.POINT_VALUE;
+																			};											
+																	}); 
+																
+																	this.thisM.forEach( v => { 
+																			if(d == v.DAY && e == v.ENERGY_GROUP_ID){
+																				map["thisMonth"] = v.POINT_VALUE;
+																			};											
+																	}); 
+															
+																	arr.push(map);
+														};
+
+														for(var i=1; i<=31 ; i++){ //달력 1~31 순서로 ordering
+
+															arr.forEach( r => {   
+																if(i == Number(r.DAY)) arr2.push(r);
+															});
+														}
+
+														this.resultSet[e]=arr2;
+												};
+
+												return 	this.resultSet;
+															
+									}
+											
+						};
+					
+						roomSEQ_dashboard_custom_chart2_DataSet = call_monthDays.getArr();
+						call_chart2(roomSEQ_dashboard_custom_chart2_DataSet,cd,fid);
+			
+
+			};
+
+  	/* 대시보드 우측 스틱 에너지원별 (월단위) DataSet 생성  */
+		 var rotateData_chart3 = function(results,cd,fid,rownum){  
+			 var columns = results.columns;
+			 var data = results.data[0];
+			 var month_arr = results.data[1];
+
+			var factory_arr = [];
+			for(i in columns){			 	
+				factory_arr = columns[i].FACTORY_NAME_LIST.split(",");
+			}
+							
+				
+			 var temp_arr = [];
+			 var temp_egi = "";			 
+			 var map_arr = [];
+
+			 for(i of month_arr){
+				temp_arr.push(i.MONTH);
+				var map = new Object;
+				map["단가"] = 0;
+
+						for(j of data){													
+											if(i.MONTH == j.MONTH ){				
+												map["단가"] = j.SALE_UNIT_PRICE;
+												temp_egi = j.ENERGY_GROUP_ID;
+											}	
+								}		
+					map_arr.push(map);						
+				}
+
+					roomSEQ_dashboard_custom_chart3_DataSet[ temp_egi ] = {
+							 MONTH : temp_arr,
+							 data : map_arr
+						}	;
+				
+				
+					call_chart3(roomSEQ_dashboard_custom_chart3_DataSet,cd,fid);					
+		 };
+
+
+</script> 
+<!-- JS BOARD CUSTOM / END -->
